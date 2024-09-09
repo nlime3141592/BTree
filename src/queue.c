@@ -17,7 +17,7 @@ int get_capacity(qarr _q)
 
 qarr create_queue(int _capacity)
 {
-    int memSize = sizeof(qdata) + _capacity * sizeof(void*);
+    int memSize = sizeof(qdata) + _capacity * sizeof(address_t*);
     qdata* qdat = (qdata*)malloc(memSize);
 
     qdat->capacity = _capacity;
@@ -50,7 +50,7 @@ qdata* grow(qdata* _qdatOld)
     return qdatNew;
 }
 
-void enqueue(qarr* _qAddress, void* _element)
+void enqueue(qarr* _qAddress, address_t* _element)
 {
     qdata* qdat = (qdata*)(*_qAddress - sizeof(qdata));
 
@@ -61,22 +61,22 @@ void enqueue(qarr* _qAddress, void* _element)
     }
 
     int appendIndex = (qdat->ptrFront + qdat->count) % (qdat->capacity);
-    ((int*)*_qAddress)[appendIndex] = (int)_element;
+    ((address_t*)*_qAddress)[appendIndex] = (address_t)_element;
     ++(qdat->count);
 }
 
-void* dequeue(qarr _q)
+address_t* dequeue(qarr _q)
 {
     qdata* qdat = (qdata*)(_q - sizeof(qdata));
 
     if(qdat->count == 0)
         return NULL;
 
-    int dequeuedElement = ((int*)_q)[qdat->ptrFront];
+    address_t dequeuedElement = ((address_t*)_q)[qdat->ptrFront];
     --(qdat->count);
     qdat->ptrFront = (qdat->ptrFront + 1) % (qdat->capacity);
 
-    return (void*)dequeuedElement;
+    return (address_t*)dequeuedElement;
 }
 
 void print_qarr(qarr _q)

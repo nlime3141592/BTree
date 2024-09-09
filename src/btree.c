@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 #include "btree.h"
-#include "prng.h"
 #include "queue.h"
 
 bnode* root;
@@ -136,6 +134,26 @@ void print_node(bnode* _node)
     printf("]");
 }
 
+void print_indent(int _indent)
+{
+    for(int i = 0; i < _indent; ++i)
+        printf("  ");
+}
+
+void print_node_dfs(bnode* _node, int _indent)
+{
+    if(_node == NULL)
+        return;
+
+    print_indent(_indent);
+    printf("- ");
+    print_node(_node);
+    printf("\n");
+
+    for(int i = 0; i <= _node->keyCount; ++i)
+        print_node_dfs(_node->children[i], _indent + 1);
+}
+
 void print_node_bfs(bnode* _root)
 {
     qarr q = create_queue(16);
@@ -169,29 +187,4 @@ void print_node_bfs(bnode* _root)
             enqueue(&q, ((void*)1));
         }
     }
-}
-
-int main()
-{
-    // root = create_node();
-    srand(time(NULL));
-
-    int count = 15;
-    int* array = get_random_numbers(count);
-    // int array[] = {7,9,5,3,6,1,2,4,10,8};
-
-    for(int i = 0; i < count; ++i)
-    {
-        add_key(NULL, 0, array[i]);
-        printf("add %d:\n", array[i]);
-        // print_node_all_dfs(root, 0);
-
-        // print_node(root, 0);
-        
-        if(root != NULL)
-            print_node_bfs(root);
-    }
-
-    print_node_bfs(root);
-    // print_node_bfs(root);
 }
