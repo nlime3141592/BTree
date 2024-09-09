@@ -20,17 +20,17 @@ int main()
     for(int i = 0; i < count; ++i)
     {
         add_key(NULL, 0, array[i]);
-        // printf("add %d:\n", array[i]);
+        printf("add %d:\n", array[i]);
         // print_node_all_dfs(root, 0);
 
         // print_node(root, 0);
         
-        // if(root != NULL) print_node_bfs(root);
+        if(root != NULL) print_node_bfs(root);
     }
 
     // print_node_dfs(root, 0);
-    print_node_bfs(root);
+    // print_node_bfs(root);
 
-    remove_key(NULL, 0, 8);
-    print_node_bfs(root);
+    // remove_key(NULL, 0, 8);
+    // print_node_bfs(root);
 }

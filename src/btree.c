@@ -111,7 +111,7 @@ bnode* split_node(bnode* _parent, bnode* _current, int _idxParent, int _key)
     }
 
     splitedNode->keyCount = _current->keyCount = mid - 1;
-    splitedNode->children[splitedNode->keyCount] = _current->children[_current->keyCount];
+    splitedNode->children[splitedNode->keyCount + 1] = _current->children[_current->keyCount];
     _current->keyCount = mid;
 
     return _parent;
