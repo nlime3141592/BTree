@@ -18,7 +18,7 @@ bnode* create_node_pure();
 bnode* create_node(int _initKey);
 
 void add_key(bnode* _parent, int _idxParent, int _key);
-void remove_key(bnode* _parent, int _key);
+int remove_key(bnode* _parent, int _idxParent, int _key);
 bnode* split_node(bnode* _parent, bnode* _current, int _idxParent, int _key);
 
 void print_node(bnode* _node);

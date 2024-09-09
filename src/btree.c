@@ -117,21 +117,119 @@ bnode* split_node(bnode* _parent, bnode* _current, int _idxParent, int _key)
     return _parent;
 }
 
-void remove_key(bnode* _parent, int _key)
+int remove_key(bnode* _parent, int _idxParent, int _key)
 {
+    int i = -1;
 
+    bnode* current = root;
+
+    if(_parent != NULL)
+        current = _parent->children[_idxParent];
+    if(current == NULL)
+        return 0; // NOTE: 정의되지 않은 노드에 대해 연산을 시도함
+
+    while(1)
+    {
+        ++i;
+
+        if(!current->isLeafNode) // NOTE: 자식 노드에서 키를 찾음
+            return remove_key(current->children[i], i, _key);
+        else if(i >= current->keyCount)
+            return 0;
+        else if(current->keys[i] > _key)
+            return 0; // NOTE: 탐색할 필요 없음
+        else if(current->keys[i] == _key) // NOTE: 현재 노드에서 키를 찾음
+        {
+            if(current->isLeafNode)
+            {
+                if(current->keyCount >= COUNT_MIN_CHILDREN)
+                {
+                    for(int j = i + 1; j < current->keyCount; ++j)
+                        current->children[j] = current->children[j + 1];
+
+                    --(current->keyCount);
+
+                    return 1;
+                }
+                else // NOTE: 리프 노드에서 키 하나를 빼면 리프 노드가 불안정 상태에 빠짐
+                {
+                    if(_idxParent < _parent->keyCount && _parent->children[_idxParent + 1]->keyCount >= COUNT_MIN_CHILDREN)
+                    {
+                        // NOTE: 오른쪽 형제 노드에서 당겨올 수 있음
+                        for(int j = i + 1; j < current->keyCount; ++j)
+                            current->keys[j - 1] = current->keys[j];
+
+                        current->keys[current->keyCount - 1] = _parent->keys[_idxParent];
+                        _parent->keys[_idxParent] = _parent->children[_idxParent + 1]->keys[0];
+
+                        for(int j = 1; j < _parent->children[_idxParent + 1]->keyCount; ++j)
+                            _parent->children[_idxParent + 1]->keys[j - 1] = _parent->children[_idxParent + 1]->keys[j];
+
+                        --(_parent->children[_idxParent + 1]->keyCount);
+
+                        return 1;
+                    }
+                    else if(_idxParent > 0 && _parent->children[_idxParent - 1]->keyCount >= COUNT_MIN_CHILDREN)
+                    {
+                        // NOTE: 왼쪽 형제 노드에서 당겨올 수 있음
+                        for(int j = i; j > 0; --j)
+                            current->keys[j] = current->keys[j - 1];
+
+                        current->keys[0] = _parent->keys[_idxParent - 1];
+                        _parent->keys[_idxParent - 1] = _parent->children[_idxParent - 1]->keys[_parent->children[_idxParent - 1]->keyCount - 1];
+
+                        --(_parent->children[_idxParent - 1]->keyCount);
+
+                        return 1;
+                    }
+                    else
+                    {
+                        // NOTE: 형제 노드에서 어떤 값도 당겨올 수 없음
+                    }
+                }
+            }
+            else if(current->children[i]->keyCount < COUNT_MIN_CHILDREN && current->children[i + 1]->keyCount < COUNT_MIN_CHILDREN) // NOTE: 어떤 자식을 끌어올려와도 자식이 불안정 상태에 빠짐
+            {
+                
+            }
+            else if(current->children[i]->keyCount >= COUNT_MIN_CHILDREN) // NOTE: 왼쪽 자식을 당겨올 수 있음
+            {
+                bnode* leaf = current->children[i];
+
+                while(!leaf->isLeafNode)
+                    leaf = leaf->children[leaf->keyCount];
+
+                current->keys[i] = leaf->keys[leaf->keyCount - 1];
+                --(leaf->keyCount);
+
+                return 1;
+            }
+            else // NOTE: 오른쪽 자식을 당겨올 수 있음
+            {
+                bnode* leaf = current->children[i + 1];
+
+                while(!leaf->isLeafNode)
+                    leaf = leaf->children[0];
+
+                current->keys[i] = leaf->keys[0];
+                --(leaf->keyCount);
+
+                return 1;
+            }
+        }
+    }
 }
 
 void print_node(bnode* _node)
 {
-    printf("[");
+    printf("%c", _node->isLeafNode ? '[' : '{');
     for(int i = 0; i < _node->keyCount; ++i)
     {
         printf("%d", _node->keys[i]);
         if(i < _node->keyCount - 1)
             printf(",");
     }
-    printf("]");
+    printf("%c", _node->isLeafNode ? ']' : '}');
 }
 
 void print_indent(int _indent)
