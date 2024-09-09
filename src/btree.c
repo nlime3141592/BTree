@@ -119,6 +119,136 @@ bnode* split_node(bnode* _parent, bnode* _current, int _idxParent, int _key)
 
 int remove_key(bnode* _parent, int _idxParent, int _key)
 {
+    bnode* current = root;
+
+    if(current == NULL)
+        return 0; // NOTE: b-tree가 존재하지 않음
+    else if(_parent != NULL)
+    {
+        if(_parent->isLeafNode)
+            return 0;
+
+        current = _parent->children[_idxParent];
+    }
+
+    int i = 0;
+
+    while(1)
+    {
+        if (remove_key(current, i, _key))
+        {
+            // NOTE: 자식 노드에서 키 찾기 성공
+            return 1;
+        }
+        else if(i >= current->keyCount)
+            return 0;
+        else if(current->keys[i] > _key)
+            return 0;
+        else if(current->keys[i] < _key)
+        {
+            ++i;
+            continue;
+        }
+        else if(current->isLeafNode) // NOTE: 여기서부터 키 찾는데 성공한 경우를 따짐
+        {
+            if(current->keyCount >= COUNT_MIN_CHILDREN)
+            {
+                for(int j = i + 1; j < current->keyCount; ++j)
+                    current->keys[j] = current->keys[j + 1];
+
+                --(current->keyCount);
+                return 1;
+            }
+            else if(_idxParent > 0 && _parent->children[_idxParent - 1]->keyCount >= COUNT_MIN_CHILDREN)
+            {
+                for(int j = current->keyCount - 1; j >= 0; --j)
+                    current->keys[j + 1] = current->keys[j];
+
+                current->keys[0] = _parent->keys[_idxParent - 1];
+                _parent->keys[_idxParent - 1] = _parent->children[_idxParent - 1]->keys[_parent->children[_idxParent - 1]->keyCount];
+                --(_parent->children[_idxParent - 1]->keyCount);
+
+                return 1;
+            }
+            else if(_idxParent < _parent->keyCount && _parent->children[_idxParent + 1]->keyCount >= COUNT_MIN_CHILDREN)
+            {
+                current->keys[current->keyCount] = _parent->keys[_idxParent];
+                _parent->keys[_idxParent] = _parent->children[_idxParent + 1]->keys[0];
+                --(_parent->children[_idxParent + 1]->keyCount);
+
+                for(int j = 0; j < _parent->children[_idxParent + 1]->keyCount; ++j)
+                    _parent->children[_idxParent + 1]->keys[j] = _parent->children[_idxParent + 1]->keys[j + 1];
+
+                return 1;
+            }
+            else if(_parent->keyCount >= COUNT_MIN_CHILDREN)
+            {
+                if(_idxParent < _parent->keyCount)
+                {
+                    for(int j = i + 1; j < current->keyCount; ++i)
+                        current->keys[j] = current->keys[j + 1];
+
+                    int shiftAmount = (current->keyCount)--;
+
+                    for(int j = _parent->children[_idxParent + 1]->keyCount - 1; j >= 0; --j)
+                        _parent->children[_idxParent + 1]->keys[j + shiftAmount] = _parent->children[_idxParent + 1]->keys[j];
+
+                    for(int j = 1; j < current->keyCount; ++j)
+                        _parent->children[_idxParent + 1]->keys[j] = current->keys[j];
+
+                    _parent->children[_idxParent + 1]->keys[shiftAmount - 1] = _parent->keys[_idxParent];
+                    _parent->keys[_idxParent] = current->keys[0];
+
+                    // TODO: free(current)
+                    free(current);
+
+                    for(int j = _idxParent + 1; j < _parent->keyCount; ++j)
+                    {
+                        _parent->children[j] = _parent->children[j + 1];
+                        _parent->keys[j] = _parent->keys[j + 1];
+                    }
+
+                    _parent->children[_parent->keyCount - 1] = _parent->children[_parent->keyCount];
+                    --(_parent->keyCount);
+
+                    return 1;
+                }
+                else
+                {
+                    _parent->children[_idxParent - 1]->keys[_parent->keyCount] = _parent->keys[_idxParent - 1];
+
+                    for(int j = 0; j < current->keyCount; ++j)
+                        _parent->children[_idxParent - 1]->keys[_parent->keyCount + 1 + j] = current->keys[j];
+
+                    _parent->children[_idxParent - 1]->keyCount += (current->keyCount + 1);
+                    --(_parent->keyCount);
+
+                    // TODO: free(current)
+                    free(current);
+
+                    return 1;
+                }
+            }
+            else
+            {
+                // NOTE: 재구조화 작업
+                // 링크: https://rebro.kr/169
+                return 1;
+            }
+        }
+        else if(current->children[i]->keyCount >= COUNT_MIN_CHILDREN)
+        {
+            return 1;
+        }
+        else
+        {
+            return 1;
+        }
+    }
+}
+
+void remove_key(bnode* _parent, int _idxParent, int _key)
+{
     int i = -1;
 
     bnode* current = root;
