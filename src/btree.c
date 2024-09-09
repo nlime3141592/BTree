@@ -117,6 +117,92 @@ bnode* split_node(bnode* _parent, bnode* _current, int _idxParent, int _key)
     return _parent;
 }
 
+void remove_key_case_1_1(bnode* _current, int _idxKey)
+{
+    for(int i = _idxKey + 1; i < _current->keyCount; ++i)
+        _current->keys[i - 1] = _current->keys[i];
+
+    --(_current->keyCount);
+}
+
+void remove_key_case_1_2l(bnode* _parent, int _idxChild, int _idxKey)
+{
+    bnode* current = _parent->children[_idxChild];
+    bnode* neighbor = _parent->children[_idxChild + 1];
+
+    for(int i = _idxKey + 1; i < current->keyCount; ++i)
+        current->keys[i] = current->keys[i + 1];
+
+    current->keys[current->keyCount - 1] = _parent->keys[_idxChild];
+    _parent->keys[_idxChild] = neighbor->keys[0];
+
+    --(neighbor->keyCount);
+
+    for(int i = 0; i < neighbor->keyCount; ++i)
+        neighbor->keys[i] = neighbor->keys[i + 1];
+}
+
+void remove_key_case_1_2r(bnode* _parent, int _idxChild, int _idxKey)
+{
+    bnode* current = _parent->children[_idxChild];
+    bnode* neighbor = _parent->children[_idxChild - 1];
+
+    for(int i = _idxKey; i > 0; --i)
+        current->keys[i] = current->keys[i - 1];
+
+    current->keys[0] = _parent->keys[_idxChild - 1];
+    _parent->keys[_idxChild - 1] = neighbor->keys[neighbor->keyCount - 1];
+    --(neighbor->keyCount);
+}
+
+void remove_key_case_1_3l(bnode* _parent, int _idxChild, int _idxKey)
+{
+    bnode* current = _parent->children[_idxChild];
+    bnode* neighbor = _parent->children[_idxChild - 1];
+
+    for(int i = _idxKey + 1; i < current->keyCount; ++i)
+        current->keys[i - 1] = current->keys[i];
+
+    neighbor->keys[neighbor->keyCount] = _parent->keys[_idxChild - 1];
+    
+    for(int i = 0; i < current->keyCount; ++i)
+        neighbor->keys[neighbor->keyCount + i + 1] = current->keys[i];
+
+    for(int i = _idxChild; i < _parent->keyCount; ++i)
+    {
+        _parent->keys[i] = _parent->keys[i + 1];
+        _parent->children[i] = _parent->children[i + 1];
+    }
+
+    free(current);
+}
+
+void remove_key_case_1_3r(bnode* _parent, int _idxChild, int _idxKey)
+{
+    bnode* current = _parent->children[_idxChild];
+    bnode* neighbor = _parent->children[_idxChild - 1];
+
+    for(int i = _idxKey + 1; i < current->keyCount; ++i)
+        current->keys[i - 1] = current->keys[i];
+
+    current->keys[current->keyCount - 1] = _parent->keys[_idxChild];
+
+    int shiftAmount = current->keyCount;
+
+    for(int i = neighbor->keyCount - 1; i >= 0; --i)
+        neighbor->keys[i + shiftAmount] = neighbor->keys[i];
+
+    for(int i = 0; i < current->keyCount; ++i)
+        neighbor->keys[i] = current->keys[i];
+
+    free(current);
+}
+
+void remove_key_case_2_1l(bnode* _parent, int _idxChild, int _idxKey)
+{
+    
+}
+
 int remove_key(bnode* _parent, int _idxParent, int _key)
 {
     bnode* current = root;
