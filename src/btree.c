@@ -197,10 +197,115 @@ void remove_key_case_1_3r(bnode* _parent, int _idxChild, int _idxKey)
 
     free(current);
 }
+void remove_key_case_1_4l(bnode* _parent, int _idxChild, int _idxKey)
+{
+    bnode* current = _parent->children[_idxChild];
+
+    for(int i = _idxKey + 1; i < current->keyCount; ++i)
+        current->keys[i] = current->keys[i + 1];
+
+    current->keys[current->keyCount - 1] = _parent->keys[_idxChild];
+
+    // remove_key_case_2_2(_parent, )
+}
 
 void remove_key_case_2_1l(bnode* _parent, int _idxChild, int _idxKey)
 {
-    
+    int i = 0;
+    bnode* current = _parent->children[_idxChild];
+    bnode* leafParent = current;
+    bnode* leaf = current->children[_idxKey];
+
+    while(!leaf->isLeafNode)
+    {
+        leafParent = leaf;
+        leaf = leaf->children[leafParent->keyCount];
+    }
+
+    int tmp = current->keys[_idxKey];
+    current->keys[_idxKey] = leaf->keys[leaf->keyCount - 1];
+    leaf->keys[leaf->keyCount - 1] = tmp;
+
+    if(leaf->keyCount >= COUNT_MIN_CHILDREN)
+        remove_key_case_1_1(current, current->keyCount - 1);
+    else if(leafParent->children[leafParent->keyCount - 1] >= COUNT_MIN_CHILDREN)
+        remove_key_case_1_2r(leafParent, leafParent->keyCount, leafParent->keyCount);
+    else
+    {
+        // TODO: 재구조화 작업이 필요함
+        // remove_key_case_2_2를 이용할 것
+        remove_key_case_2_2(leafParent, leafParent->keyCount - 1);
+    }
+}
+
+void remove_key_case_2_1r(bnode* _parent, int _idxChild, int _idxKey)
+{
+    bnode* current = _parent->children[_idxChild];
+    bnode* leafParent = current;
+    bnode* leaf = current->children[_idxKey + 1];
+
+    while(!leaf->isLeafNode)
+    {
+        leafParent = leaf;
+        leaf = leaf->children[0];
+    }
+
+    int tmp = current->keys[_idxKey];
+    current->keys[_idxKey] = leaf->keys[0];
+    leaf->keys[0] = tmp;
+
+    if(leaf->keyCount >= COUNT_MIN_CHILDREN)
+        remove_key_case_1_1(current, current->keyCount - 1);
+    else if(leafParent->children[1]->keyCount >= COUNT_MIN_CHILDREN)
+        remove_key_case_1_2l(leafParent, 0, 0);
+    else
+    {
+        // TODO: 재구조화 작업이 필요함
+        // remove_key_case_2_2를 이용할 것
+        remove_key_case_2_2(leafParent, 0);
+    }
+}
+
+void remove_key_case_2_2(bnode* _current, int _idxKey)
+{
+    bnode* parent = _current;
+    bnode* childL = parent->children[_idxKey];
+    bnode* childR = parent->children[_idxKey + 1];
+    int idxParent = _idxKey;
+
+    for(int i = _idxKey + 1; i < parent->keyCount; ++i)
+    {
+        parent->keys[i - 1] = parent->keys[i];
+        parent->children[i] = parent->children[i + 1];
+    }
+
+    while(1)
+    {
+        for(int i = 0; i < childR->keyCount; ++i)
+            childL->keys[childL->keyCount + i] = childR->keys[i];
+
+        if(childL->isLeafNode)
+            break;
+
+        for(int i = 1; i <= childR->keyCount; ++i)
+            childL->children[childL->keyCount + i] = childR->children[i];
+
+        bnode* nextChildL = childL->children[childL->keyCount];
+        parent = childL;
+        idxParent = childL->keyCount;
+        childL->keyCount += childR->keyCount;
+        childL = nextChildL;
+
+        bnode* prevChildR = childR->children[0];
+        childR = prevChildR;
+
+        free(prevChildR);
+    }
+
+    bnode* splitedNode = split_node(parent, childL, idxParent, childL->keys[childL->keyCount / 2]);
+
+    if(splitedNode != NULL)
+        root = splitedNode;
 }
 
 int remove_key(bnode* _parent, int _idxParent, int _key)

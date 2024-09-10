@@ -27,10 +27,5 @@ int main()
         
         if(root != NULL) print_node_bfs(root);
     }
-
-    // print_node_dfs(root, 0);
-    // print_node_bfs(root);
-
-    // remove_key(NULL, 0, 8);
-    // print_node_bfs(root);
+    // print_node_dfs(root, 0);    // print_node_bfs(root);node_bfs(root);
 }
